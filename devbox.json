@@ -1,0 +1,19 @@
+{
+    "$schema": "https://raw.githubusercontent.com/jetpack-io/devbox/0.10.1/.schema/devbox.schema.json",
+    "packages": [
+      "go@1.22.1",
+      "golangci-lint@1.56.2",
+      "gcc",
+      "libcap"
+    ],
+    "shell": {
+      "init_hook": [
+        "export \"GOROOT=$(go env GOROOT)\""
+      ],
+      "scripts": {
+        "run": "go run main.go",
+        "build": "go build ./"
+      }
+    }
+  }
+  
