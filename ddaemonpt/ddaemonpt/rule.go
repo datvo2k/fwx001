@@ -9,8 +9,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"fwx001/ddaemonpt/internal/log"
 )
 
 var RawBuiltinRules = []string{
@@ -157,7 +156,51 @@ func BuildRules(str string) ([]Rule, error) {
 
 		rule := Rule{methods, pattern}
 		rules = append(rules, rule)
+
+		log.Debug("loaded rule: %s\n", rule)
 	}
 
 	return rules, nil
+}
+
+func BuildRulesFromFilePath(path string) ([]Rule, error) {
+	var rules []Rule
+
+	file, err := os.Open(filepath.Clean(path))
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if !fileInfo.Mode().IsRegular() {
+		return nil, fmt.Errorf("open %s: not a file", path)
+	}
+
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	for scanner.Scan() {
+		r, err := BuildRules(scanner.Text())
+		if err != nil {
+			return nil, err
+		}
+
+		rules = append(rules, r...)
+	}
+	return rules, nil
+}
+
+func (rule Rule) String() string {
+	methods := make([]string, 0, len(rule.Methods))
+	for k := range rule.Methods {
+		methods = append(methods, k)
+	}
+	sort.Strings(methods)
+
+	return fmt.Sprintf("%s %s", strings.Join(methods, ","), rule.Pattern.String())
 }
