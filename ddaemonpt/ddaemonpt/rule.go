@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"fwx001/ddaemonpt/internal/log"
 )
@@ -116,6 +117,15 @@ type Rule struct {
 	Pattern *regexp.Regexp
 }
 
+var logger = log.New(log.Opts{
+	EnableColor:          true,
+	Level:                log.DebugLevel,
+	CallerSkipFrameCount: 3,
+	EnableCaller:         true,
+	TimestampFormat:      time.RFC3339Nano,
+	DefaultFields:        []any{"scope", "example"},
+})
+
 func BuildRules(str string) ([]Rule, error) {
 	var rules []Rule
 
@@ -157,7 +167,7 @@ func BuildRules(str string) ([]Rule, error) {
 		rule := Rule{methods, pattern}
 		rules = append(rules, rule)
 
-		log.Debug("loaded rule: %s\n", rule)
+		logger.Debug("loaded rule: %s\n", rule)
 	}
 
 	return rules, nil
