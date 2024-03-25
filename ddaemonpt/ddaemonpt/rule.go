@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"time"
 
 	"fwx001/ddaemonpt/internal/log"
 )
@@ -112,20 +111,6 @@ var (
 	}
 )
 
-type Rule struct {
-	Methods map[string]struct{}
-	Pattern *regexp.Regexp
-}
-
-var logger = log.New(log.Opts{
-	EnableColor:          true,
-	Level:                log.DebugLevel,
-	CallerSkipFrameCount: 3,
-	EnableCaller:         true,
-	TimestampFormat:      time.RFC3339Nano,
-	DefaultFields:        []any{"scope", "example"},
-})
-
 func BuildRules(str string) ([]Rule, error) {
 	var rules []Rule
 
@@ -167,7 +152,7 @@ func BuildRules(str string) ([]Rule, error) {
 		rule := Rule{methods, pattern}
 		rules = append(rules, rule)
 
-		logger.Debug("loaded rule: %s\n", rule)
+		log.Debugf("loaded rule: %s\n", rule)
 	}
 
 	return rules, nil
@@ -188,6 +173,7 @@ func BuildRulesFromFilePath(path string) ([]Rule, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if !fileInfo.Mode().IsRegular() {
 		return nil, fmt.Errorf("open %s: not a file", path)
 	}
@@ -202,7 +188,13 @@ func BuildRulesFromFilePath(path string) ([]Rule, error) {
 
 		rules = append(rules, r...)
 	}
+
 	return rules, nil
+}
+
+type Rule struct {
+	Methods map[string]struct{}
+	Pattern *regexp.Regexp
 }
 
 func (rule Rule) String() string {
@@ -212,5 +204,8 @@ func (rule Rule) String() string {
 	}
 	sort.Strings(methods)
 
-	return fmt.Sprintf("%s %s", strings.Join(methods, ","), rule.Pattern.String())
+	return fmt.Sprintf("%s %s",
+		strings.Join(methods, ","),
+		rule.Pattern.String(),
+	)
 }
